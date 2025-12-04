@@ -1,0 +1,37 @@
+# Import Libraries
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+df = sns.load_dataset("tips")
+print("Dataset Preview:")
+print(df.head())
+print("\nBasic Info:")
+print(df.info())
+sns.set_style("whitegrid")
+sns.set_palette("pastel")
+# 1️⃣
+# Distribution Plot
+plt.figure(figsize=(8, 5))
+sns.histplot(df["total_bill"], kde=True, bins=20)
+plt.title("Distribution of Total Bill")
+plt.xlabel("Total Bill ($)")
+plt.ylabel("Frequency")
+plt.show()
+
+plt.figure(figsize=(6, 4))
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", fmt=".2f")
+plt.title("Correlation Heatmap")
+plt.show()
+
+g = sns.FacetGrid(df, col="day", hue="time", height=4, aspect=1)
+g.map(sns.scatterplot, "total_bill", "tip", alpha=0.7)
+g.add_legend()
+plt.suptitle("Tip Trends across Days and Times", y=1.05)
+plt.show()
+
+print("\n🔍 Insights Summary:")
+print("- Most bills are between $10–$30 (right-skewed).")
+print("- Larger bills usually mean larger tips (positive correlation ≈ 0.68).")
+print("- Weekend bills (Sat/Sun) are higher on average.")
+print("- Dinner service tends to generate higher tips than lunch.")
+print("- Male customers tip slightly higher on average.")
