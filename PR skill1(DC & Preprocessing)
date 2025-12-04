@@ -1,0 +1,44 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+# LOAD DATASET
+df = pd.read_csv("/content/train.csv.zip")   
+print("\nInitial Dataset:")
+print(df.head())
+
+# MISSING VALUES
+# Fill missing Age with median
+df['Age'] = df['Age'].fillna(df['Age'].median())
+
+# Fill missing Embarked with mode
+df['Embarked'] = df['Embarked'].fillna(df['Embarked'].mode()[0])
+
+# Drop Cabin column if it exists (highly missing, similar to your 'deck' idea)
+if 'Cabin' in df.columns:
+    df.drop(columns=['Cabin'], inplace=True)
+
+# REMOVE DUPLICATES
+df.drop_duplicates(inplace=True)
+
+# CATEGORICAL TO NUMERIC
+# One-hot encode Sex and Embarked
+df = pd.get_dummies(df, columns=['Sex', 'Embarked'], drop_first=True)
+
+# OUTLIER REMOVAL (AGE)
+Q1 = df['Age'].quantile(0.25)
+Q3 = df['Age'].quantile(0.75)
+IQR = Q3 - Q1
+
+df = df[(df['Age'] >= Q1 - 1.5 * IQR) & (df['Age'] <= Q3 + 1.5 * IQR)]
+
+# SCALE NUMERICAL FEATURES
+scaler = StandardScaler()
+df[['Age', 'Fare']] = scaler.fit_transform(df[['Age', 'Fare']])
+
+print("\nFinal Cleaned Dataset:")
+print(df.head(50))   # shows first 50 rows
+
+print("\nFinal Shape:", df.shape)
