@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 1. Load dataset
-data = pd.read_csv('/content/archive (9).zip')
+data = pd.read_csv('/content/heart disease.zip')
 print("Dataset shape:", data.shape)
 print(data.head())
 
