@@ -1,0 +1,75 @@
+import tensorflow_datasets as tfds
+import tensorflow as tf
+
+# Load the dataset
+(ds_train, ds_val), ds_info = tfds.load(
+    'cats_vs_dogs',
+    split=['train[:80%]', 'train[80%:]'],
+    shuffle_files=True,
+    as_supervised=True,  # returns (image, label)
+    with_info=True,
+)
+
+# Resize and normalize
+IMG_SIZE = (150, 150)
+
+def preprocess(image, label):
+    image = tf.image.resize(image, IMG_SIZE)
+    image = image / 255.0
+    return image, label
+
+train_ds = ds_train.map(preprocess).batch(32).prefetch(tf.data.AUTOTUNE)
+val_ds = ds_val.map(preprocess).batch(32).prefetch(tf.data.AUTOTUNE)
+
+print("Dataset loaded successfully!")
+
+
+Step 2: Preprocessing
+IMG_SIZE = (150, 150)
+BATCH_SIZE = 32
+
+def preprocess(image, label):
+    image = tf.image.resize(image, IMG_SIZE)
+    image = image / 255.0     # normalize
+    return image, label
+
+train_ds = ds_train.map(preprocess).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+val_ds = ds_val.map(preprocess).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+
+# Step 3: Build ANN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=IMG_SIZE + (3,)),
+    tf.keras.layers.Dense(512, activation='relu'),
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid')  # binary output
+])
+
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+# Step 4: Train the model
+history = model.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=10
+)
+
+# Step 5: Evaluate and Predict
+for images, labels in val_ds.take(1):
+    preds = model.predict(images)
+    pred_classes = (preds > 0.5).astype(int).flatten()
+
+    plt.figure(figsize=(15, 6))
+    for i in range(10):
+        plt.subplot(2, 5, i+1)
+        plt.imshow(images[i].numpy())
+        actual = "Dog" if labels[i].numpy() == 1 else "Cat"
+        predicted = "Dog" if pred_classes[i] == 1 else "Cat"
+        plt.title(f"Pred: {predicted}\nActual: {actual}")
+        plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+    break
