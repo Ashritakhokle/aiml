@@ -1,0 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+import tensorflow as tf
+
+# 1️.Load dataset (example: CIFAR-10 animals)
+(x_train, y_train), (_, _) = tf.keras.datasets.cifar10.load_data()
+
+label_names = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer',
+               'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
+
+# Select only 10 classes (already in CIFAR-10)
+animal_indices = np.arange(10)
+
+# Fix: Flatten y_train before creating the mask
+mask = np.isin(y_train.flatten(), animal_indices)
+X_animals = x_train[mask]
+y_animals = y_train[mask]
+
+# 2️ Random sample of 10 images
+np.random.seed(8)
+rand_idx = np.random.choice(len(X_animals), 10, replace=False)
+
+X_sample = X_animals[rand_idx]
+y_sample = y_animals[rand_idx]
+
+# 3️ Convert to grayscale & flatten
+X_gray = np.array([tf.image.rgb_to_grayscale(img).numpy().reshape(32, 32)
+                   for img in X_sample])
+
+flat_X = X_gray.reshape(10, -1)   # shape = (10, 1024)
+
+# 4️ PCA (2 components)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(flat_X)
+
+# Reconstruct images from PCA
+X_reconstructed = pca.inverse_transform(X_pca)
+X_reconstructed = X_reconstructed.reshape(10, 32, 32)
+
+# 5️ Plot Original vs PCA Reconstructed
+fig, axes = plt.subplots(2, 10, figsize=(13, 4))
+
+for i in range(10):
+    # Original
+    axes[0, i].imshow(X_gray[i], cmap="gray")
+    axes[0, i].axis("off")
+    axes[0, i].set_title(label_names[int(y_sample[i][0])], fontsize=8)
+
+    # Reconstructed
+    axes[1, i].imshow(X_reconstructed[i], cmap="gray")
+    axes[1, i].axis("off")
+
+axes[0, 0].set_ylabel("Original", fontsize=12)
+axes[1, 0].set_ylabel("2 PCA", fontsize=12)
+
+plt.suptitle("Original vs PCA-Reconstructed Animals (2 Features)", fontsize=14)
+plt.tight_layout()
+plt.show()
+
+# 6️ Plot PCA Feature Space
+plt.figure(figsize=(7, 6))
+
+for i, label in enumerate(y_sample.flatten()):
+    plt.scatter(X_pca[i, 0], X_pca[i, 1], label=label_names[label])
+    plt.text(X_pca[i, 0], X_pca[i, 1], label_names[label], fontsize=8)
+
+plt.xlabel("PCA Feature 1")
+plt.ylabel("PCA Feature 2")
+plt.title("Animals Represented by 2 PCA Features")
+plt.legend(fontsize=7, bbox_to_anchor=(1.05, 1), loc="upper left")
+plt.tight_layout()
+plt.show()
