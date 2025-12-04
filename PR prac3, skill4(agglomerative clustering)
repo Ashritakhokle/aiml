@@ -1,0 +1,36 @@
+#1import pandas as pd # manipulate your data
+D = pd.read_excel("/content/Iris.xlsx", index_col=0)
+print(f"Data has {D.shape[0]} rows and {D.shape[1]} columns.\n")
+D.head()
+df=D.rename(columns={'SepalLengthCm': 'SepalLength', 'SepalWidthCm': 'SepalWidth','PetalLengthCm':'PetalLength', 'PetalWidthCm':'PetalWidth'})
+df.replace({'Iris-setosa': '1', 'Iris-versicolor': '2', 'Iris-virginica': '3'},inplace=True)
+df.head()
+import seaborn as sns
+sns.pairplot(df,hue='Species',height=3)
+
+#2df1=df.drop(['SepalLength', 'SepalWidth', 'Species'], axis=1)
+df1.head()
+X=df1.to_numpy()
+X.shape
+%matplotlib inline
+import matplotlib.pyplot as plt
+plt.scatter(X[:, 0], X[:, 1], s=150);
+
+#3from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(X)
+y_kmeans = kmeans.predict(X)
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=150, cmap='viridis')
+centers = kmeans.cluster_centers_
+plt.scatter(centers[:, 0], centers[:, 1], c='red', s=150, alpha=0.5);
+
+#4import scipy.cluster.hierarchy as sch
+dendrogram = sch.dendrogram(sch.linkage(X, method='complete')) # A dendrogram is a tree-like diagram that records the sequences of merges or splits
+
+#5from sklearn.cluster import AgglomerativeClustering
+Agglclustering = AgglomerativeClustering(n_clusters=3, metric='euclidean', linkage='complete')# we can take n_clusters with any threshould
+Agglclustering.fit(X)
+labels = Agglclustering.labels_
+plt.scatter(X[labels==0, 0], X[labels==0, 1], s=50, marker='o', color='red')
+plt.scatter(X[labels==1, 0], X[labels==1, 1], s=50, marker='o', color='blue')
+plt.scatter(X[labels==2, 0], X[labels==2, 1], s=50, marker='o', color='green')
