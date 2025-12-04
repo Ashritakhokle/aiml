@@ -8,7 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, ConfusionMatrixDisplay
 
 # Load dataset
-data = pd.read_csv("/content/archive (10).zip")
+data = pd.read_csv("/content/DIAMOND PRICE PREDICTION.zip")
 print("First 5 rows:\n", data.head())
 print("\nColumns:\n", data.columns)
 
