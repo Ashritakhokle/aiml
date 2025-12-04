@@ -1,0 +1,88 @@
+# Step 1: Import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.ensemble import RandomForestClassifier
+
+# Step 2: Load dataset
+train = pd.read_csv("/content/train.csv.zip")
+
+# Step 3: Show original data
+print("Original Titanic Dataset:")
+print(train.head())
+
+# Step 4: Extract Title from Name
+train["Title"] = train["Name"].str.extract(" ([A-Za-z]+)\.", expand=False)
+
+train["Title"] = train["Title"].replace(
+    ["Lady", "Countess", "Capt", "Col", "Don", "Dr", "Major", "Rev",
+     "Sir", "Jonkheer", "Dona"], "Rare"
+)
+
+train["Title"] = train["Title"].replace(
+    ["Mlle", "Ms"], "Miss"
+)
+
+train["Title"] = train["Title"].replace("Mme", "Mrs")
+
+# Step 5: Extract Deck from Cabin
+train["Deck"] = train["Cabin"].str[0].fillna("U")
+
+# Step 6: Feature creation – FamilySize & IsAlone
+train["FamilySize"] = train["SibSp"] + train["Parch"] + 1
+train["IsAlone"] = (train["FamilySize"] == 1).astype(int)
+
+# Step 7: Encode categorical features
+train["Sex"] = train["Sex"].map({"male": 0, "female": 1})
+
+train["Embarked"].fillna(train["Embarked"].mode()[0], inplace=True)
+train["Embarked"] = train["Embarked"].map({"S": 0, "C": 1, "Q": 2})
+
+# Step 8: Handle missing values
+train["Age"].fillna(train["Age"].median(), inplace=True)
+train["Fare"].fillna(train["Fare"].median(), inplace=True)
+
+# Step 9: Binning
+train["AgeBin"] = pd.cut(train["Age"], 5, labels=False)
+train["FareBin"] = pd.qcut(train["Fare"], 4, labels=False)
+
+# Step 10: One-hot encoding
+train = pd.get_dummies(train, columns=["Deck", "Title"])
+
+# Step 11: Drop unused columns
+train.drop(["PassengerId", "Name", "Ticket", "Cabin", "Age", "Fare"], axis=1, inplace=True)
+
+# Step 12: Prepare X and y
+y = train["Survived"]
+X = train.drop(["Survived"], axis=1)
+
+# Step 13: Train-test split
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 14: Train Random Forest model
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Step 15: Predict & accuracy
+y_pred = model.predict(X_val)
+accuracy = accuracy_score(y_val, y_pred)
+print(f"Model Accuracy: {accuracy:.4f}")
+
+# Step 16: Accuracy bar chart
+plt.figure(figsize=(6, 4))
+plt.bar(["RandomForest"], [accuracy], color="skyblue")
+plt.ylim(0, 1)
+plt.ylabel("Accuracy")
+plt.title("Model Accuracy on Validation Set")
+plt.show()
+
+# Step 17: Confusion Matrix
+cm = confusion_matrix(y_val, y_pred)
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+fig, ax = plt.subplots(figsize=(6, 6))
+disp.plot(ax=ax)
+plt.title("Confusion Matrix")
+plt.show()
